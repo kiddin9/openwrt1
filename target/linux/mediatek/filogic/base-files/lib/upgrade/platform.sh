@@ -71,6 +71,7 @@ platform_do_upgrade() {
 	bananapi,bpi-r3-mini|\
 	bananapi,bpi-r4|\
 	bananapi,bpi-r4-poe|\
+	bananapi,bpi-r4-lite|\
 	cmcc,a10-ubootmod|\
 	cmcc,rax3000m|\
 	cudy,tr3000-v1-ubootmod|\
@@ -197,6 +198,7 @@ platform_check_image() {
 	bananapi,bpi-r3-mini|\
 	bananapi,bpi-r4|\
 	bananapi,bpi-r4-poe|\
+	bananapi,bpi-r4-lite|\
 	cmcc,rax3000m)
 		[ "$magic" != "d00dfeed" ] && {
 			echo "Invalid image type."
@@ -219,6 +221,7 @@ platform_copy_config() {
 	bananapi,bpi-r3-mini|\
 	bananapi,bpi-r4|\
 	bananapi,bpi-r4-poe|\
+	bananapi,bpi-r4-lite|\
 	cmcc,rax3000m)
 		if [ "$CI_METHOD" = "emmc" ]; then
 			emmc_copy_config
