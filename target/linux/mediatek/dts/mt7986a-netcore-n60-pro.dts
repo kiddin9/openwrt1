@@ -242,6 +242,10 @@
 		spi-tx-bus-width = <4>;
 		spi-rx-bus-width = <4>;
 
+		mediatek,nmbm;
+		mediatek,bmt-max-ratio = <1>;
+		mediatek,bmt-max-reserved-blocks = <64>;
+
 		partitions {
 			compatible = "fixed-partitions";
 			#address-cells = <1>;
@@ -290,7 +294,7 @@
 
 			partition@580000 {
 				label = "ubi";
-				reg = <0x0580000 0x7a80000>;
+				reg = <0x0580000 0x7280000>;
 				compatible = "linux,ubi";
 
 				volumes {
