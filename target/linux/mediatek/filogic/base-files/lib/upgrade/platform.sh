@@ -243,13 +243,6 @@ platform_do_upgrade() {
 			;;
 		esac
 		;;
-	xiaomi,mi-router-ax3000t|\
-	xiaomi,mi-router-wr30u-stock|\
-	xiaomi,redmi-router-ax6000-stock)
-		CI_KERN_UBIPART=ubi_kernel
-		CI_ROOT_UBIPART=ubi
-		nand_do_upgrade "$1"
-		;;
 	*)
 		nand_do_upgrade "$1"
 		;;
