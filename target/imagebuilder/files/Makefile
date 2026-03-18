@@ -144,6 +144,33 @@ BUILD_PACKAGES:=$(sort $(DEFAULT_PACKAGES) $($(USER_PROFILE)_PACKAGES) kernel)
 # "-pkgname" in the package list means remove "pkgname" from the package list
 BUILD_PACKAGES:=$(filter-out $(filter -%,$(BUILD_PACKAGES)) $(patsubst -%,%,$(filter -%,$(BUILD_PACKAGES))),$(BUILD_PACKAGES))
 BUILD_PACKAGES:=$(USER_PACKAGES) $(BUILD_PACKAGES)
+IMAGE_SIZE_VALUE := $($(USER_PROFILE)_IMAGE_SIZE)
+ifdef IMAGE_SIZE_VALUE
+	ifeq ($(shell test $(IMAGE_SIZE_VALUE) -le 35840 && echo true),true)
+		SMALL_FLASH := true
+	endif
+	ifeq ($(shell test $(IMAGE_SIZE_VALUE) -le 20480 && echo true),true)
+		XSMALL_FLASH := true
+	endif
+endif
+ifneq ($(findstring usb,$(BUILD_PACKAGES)),)
+	ifneq ($(XSMALL_FLASH),true)
+		BUILD_PACKAGES += automount luci-app-diskman
+	endif
+endif
+ifeq ($(SMALL_FLASH),true)
+	ifeq ($(shell grep -q small_flash $(TOPDIR)/repositories.conf || echo "not_found"),not_found)
+        $(shell echo "`grep kwrt_kiddin9 $(TOPDIR)/repositories.conf | sed -e 's/kiddin9/small_flash/g'`" >>$(TOPDIR)/repositories.conf)
+	endif
+	ifneq ($(findstring /www/wwwroot/,$(BIN_DIR)),)
+		BUILD_PACKAGES += -luci-app-istorex -luci-theme-argon -htop -bash -openssh-sftp-server -luci-nginx luci-ssl
+	endif
+else
+        $(shell sed -i "/small_flash/d" $(TOPDIR)/repositories.conf)
+endif
+define add_zh_cn_packages
+$(eval BUILD_PACKAGES += $(foreach pkg,$(BUILD_PACKAGES),$(if $(and $(filter luci-app-%,$(pkg)),$(shell $(OPKG) list | grep -q "^luci-i18n-$(patsubst luci-app-%,%,$(pkg))-zh-cn" && echo 1)),luci-i18n-$(patsubst luci-app-%,%,$(pkg))-zh-cn)))
+endef
 BUILD_PACKAGES:=$(filter-out $(filter -%,$(BUILD_PACKAGES)) $(patsubst -%,%,$(filter -%,$(BUILD_PACKAGES))),$(BUILD_PACKAGES))
 
 ifneq ($(CONFIG_USE_APK),)
@@ -184,7 +211,10 @@ _call_image: staging_dir/host/.prereq-build
 	$(MAKE) -s prepare_rootfs
 	$(MAKE) -s build_image
 	$(MAKE) -s json_overview_image_info
+ifeq ($(findstring /www/wwwroot/,$(BIN_DIR)),)
 	$(MAKE) -s checksum
+endif
+	rm -rf $(KERNEL_BUILD_DIR)/tmp $(KERNEL_BUILD_DIR)/root.* $(TARGET_DIR) $(TARGET_DIR_ORIG)
 
 _call_manifest: FORCE
 	rm -rf $(TARGET_DIR)
@@ -251,9 +281,17 @@ package_install: FORCE
 	@echo
 	@echo Installing packages...
 ifeq ($(CONFIG_USE_APK),)
+	$(eval $(call add_zh_cn_packages))
 	$(OPKG) install $(wildcard $(PACKAGE_DIR)/libc_*.ipk)
 	$(OPKG) install $(wildcard $(PACKAGE_DIR)/kernel_*.ipk)
-	$(OPKG) install $(BUILD_PACKAGES)
+	$(OPKG) install --force-maintainer $(BUILD_PACKAGES) luci-i18n-base-zh-cn || true
+	$(if $(USER_FILES), \
+	find $(USER_FILES) -name "*.ipk" -print0 | \
+	while IFS= read -r -d '' ipk; do \
+		$(OPKG) install "$$ipk" && rm -f "$$ipk" || true; \
+	done; \
+	)
+	$(OPKG) install --force-maintainer --force-reinstall my-default-settings 2>/dev/null
 else
 	$(eval BUILD_PACKAGES:=$(call FormatPackages,$(BUILD_PACKAGES)))
 	$(APK) add --arch $(ARCH_PACKAGES) --no-scripts $(BUILD_PACKAGES)
@@ -280,16 +318,19 @@ else
 	)
 endif
 	$(call prepare_rootfs,$(TARGET_DIR),$(USER_FILES),$(DISABLED_SERVICES))
+	$(if $(SMALL_FLASH), \
+        $(shell echo "`grep kwrt_kiddin9 $(TOPDIR)/repositories.conf | sed -e 's/kiddin9/small_flash/g'`" >>$(BUILD_DIR)/root-*/etc/opkg/distfeeds.conf) \
+	)
 
 build_image: FORCE
 	@echo
 	@echo Building images...
 	rm -rf $(BUILD_DIR)/json_info_files/
 	if [ -d "target/linux/feeds/$(BOARD)" ]; then \
-		$(NO_TRACE_MAKE) -C target/linux/feeds/$(BOARD)/image install TARGET_BUILD=1 IB=1 EXTRA_IMAGE_NAME="$(EXTRA_IMAGE_NAME)" \
+		nice $(NO_TRACE_MAKE) -C target/linux/feeds/$(BOARD)/image install TARGET_BUILD=1 IB=1 EXTRA_IMAGE_NAME="$(EXTRA_IMAGE_NAME)" \
 			$(if $(USER_PROFILE),PROFILE="$(USER_PROFILE)"); \
 	else \
-		$(NO_TRACE_MAKE) -C target/linux/$(BOARD)/image install TARGET_BUILD=1 IB=1 EXTRA_IMAGE_NAME="$(EXTRA_IMAGE_NAME)" \
+		nice $(NO_TRACE_MAKE) -C target/linux/$(BOARD)/image install TARGET_BUILD=1 IB=1 EXTRA_IMAGE_NAME="$(EXTRA_IMAGE_NAME)" \
 			$(if $(USER_PROFILE),PROFILE="$(USER_PROFILE)"); \
 	fi
 
