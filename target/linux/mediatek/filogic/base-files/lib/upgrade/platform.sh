@@ -78,7 +78,13 @@ platform_do_upgrade() {
 	local board=$(board_name)
 
 	case "$board" in
-	abt,asr3000|\
+	aigo,ags21|\
+	cmcc,rax3000m-emmc|\
+	cmcc,xr30-emmc|\
+	philips,hy3000|\
+	sl,3000*|\
+	bt,r320|\
+	umi,uax3000e|\
 	acer,predator-w6x-ubootmod|\
 	asus,zenwifi-bt8-ubootmod|\
 	bananapi,bpi-r3|\
@@ -89,7 +95,6 @@ platform_do_upgrade() {
 	bananapi,bpi-r4-lite|\
 	bazis,ax3000wm|\
 	cmcc,a10-ubootmod|\
-	cmcc,rax3000m|\
 	comfast,cf-wr632ax-ubootmod|\
 	cudy,tr3000-v1-ubootmod|\
 	cudy,wbr3000uax-v1-ubootmod|\
@@ -98,29 +103,17 @@ platform_do_upgrade() {
 	cudy,wr3000h-v1-ubootmod|\
 	cudy,wr3000p-v1-ubootmod|\
 	gatonetworks,gdsp|\
-	h3c,magic-nx30-pro|\
 	imou,hx21|\
-	jcg,q30-pro|\
-	jdcloud,re-cp-03|\
-	konka,komi-a31|\
 	mediatek,mt7981-rfb|\
 	mediatek,mt7988a-rfb|\
 	mercusys,mr90x-v1-ubi|\
 	netis,nx30v2|\
 	netis,nx31|\
 	netis,nx32u|\
-	nokia,ea0326gmp|\
 	openwrt,one|\
-	netcore,n60|\
-	netcore,n60-pro|\
-	qihoo,360t7|\
 	routerich,ax3000-ubootmod|\
 	routerich,be7200|\
 	snr,snr-cpe-ax2|\
-	tplink,tl-xdr4288|\
-	tplink,tl-xdr6086|\
-	tplink,tl-xdr6088|\
-	tplink,tl-xtr8488|\
 	xiaomi,mi-router-ax3000t-ubootmod|\
 	xiaomi,redmi-router-ax6000-ubootmod|\
 	xiaomi,mi-router-wr30u-ubootmod|\
@@ -257,13 +250,6 @@ platform_do_upgrade() {
 			nand_do_upgrade "$1"
 			;;
 		esac
-		;;
-	xiaomi,mi-router-ax3000t|\
-	xiaomi,mi-router-wr30u-stock|\
-	xiaomi,redmi-router-ax6000-stock)
-		CI_KERN_UBIPART=ubi_kernel
-		CI_ROOT_UBIPART=ubi
-		nand_do_upgrade "$1"
 		;;
 	*)
 		nand_do_upgrade "$1"
