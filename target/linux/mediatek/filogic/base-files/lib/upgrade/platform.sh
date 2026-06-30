@@ -100,6 +100,13 @@ platform_do_upgrade() {
 
 	case "$board" in
 	abt,asr3000|\
+	aigo,ags21|\
+	cmcc,rax3000m-emmc|\
+	cmcc,xr30-emmc|\
+	philips,hy3000|\
+	sl,3000*|\
+	bt,r320|\
+	umi,uax3000e|\
 	acer,predator-w6x-ubootmod|\
 	asus,zenwifi-bt8-ubootmod|\
 	bananapi,bpi-r3|\
@@ -284,13 +291,6 @@ platform_do_upgrade() {
 			;;
 		esac
 		;;
-	xiaomi,mi-router-ax3000t|\
-	xiaomi,mi-router-wr30u-stock|\
-	xiaomi,redmi-router-ax6000-stock)
-		CI_KERN_UBIPART=ubi_kernel
-		CI_ROOT_UBIPART=ubi
-		nand_do_upgrade "$1"
-		;;
 	*)
 		nand_do_upgrade "$1"
 		;;
@@ -316,7 +316,6 @@ platform_check_image() {
 	bananapi,bpi-r4-lite|\
 	bazis,ax3000wm|\
 	cmcc,a10-ubootmod|\
-	cmcc,rax3000m|\
 	comfast,cf-wr632ax-ubootmod|\
 	creatlentem,clt-r30b1-ubi|\
 	cudy,tr3000-v1-ubootmod|\
@@ -326,25 +325,14 @@ platform_check_image() {
 	cudy,wr3000h-v1-ubootmod|\
 	cudy,wr3000p-v1-ubootmod|\
 	gatonetworks,gdsp|\
-	h3c,magic-nx30-pro|\
-	jcg,q30-pro|\
-	jdcloud,re-cp-03|\
-	konka,komi-a31|\
 	mediatek,mt7981-rfb|\
 	mediatek,mt7988a-rfb|\
 	mercusys,mr90x-v1-ubi|\
-	nokia,ea0326gmp|\
 	netis,eap930-v1|\
 	netis,nx32u|\
 	openwrt,one|\
-	netcore,n60|\
-	qihoo,360t7|\
 	qihoo,360t7-ubi|\
 	routerich,ax3000-ubootmod|\
-	tplink,tl-xdr4288|\
-	tplink,tl-xdr6086|\
-	tplink,tl-xdr6088|\
-	tplink,tl-xtr8488|\
 	xiaomi,mi-router-ax3000t-ubootmod|\
 	xiaomi,redmi-router-ax6000-ubootmod|\
 	xiaomi,mi-router-wr30u-ubootmod|\
@@ -394,6 +382,11 @@ platform_copy_config() {
 	acer,vero-w6m|\
 	airpi,ap3000m|\
 	arcadyan,mozart|\
+	cmcc,rax3000m-emmc|\
+	cmcc,xr30-emmc|\
+	philips,hy3000|\
+	sl,3000*|\
+	bt,r320|\
 	glinet,gl-mt2500|\
 	glinet,gl-mt2500-airoha|\
 	glinet,gl-mt6000|\
@@ -416,6 +409,18 @@ platform_copy_config() {
 	esac
 }
 
+tenbay_dualboot_fixup()
+{
+	[ "$(rootfs_type)" = "tmpfs" ] || return 0
+
+	if ! fw_printenv -n boot_from &>/dev/null; then
+		echo "unable to read uboot-env"
+		return 1
+	fi
+
+	fw_setenv boot_from ubi
+}
+
 platform_pre_upgrade() {
 	local board=$(board_name)
 
@@ -435,10 +440,8 @@ platform_pre_upgrade() {
 	jiorouter,ax6000-jidu6101)
 		jiorouter_initial_setup
 		;;
-	xiaomi,mi-router-ax3000t|\
-	xiaomi,mi-router-wr30u-stock|\
-	xiaomi,redmi-router-ax6000-stock)
-		xiaomi_initial_setup
+	cmcc,mr3000d-ciq-256m)
+		tenbay_dualboot_fixup
 		;;
 	esac
 }
