@@ -488,18 +488,10 @@ define Device/xiaomi_redmi-router-ax6s
   UBINIZE_OPTS := -E 5
   BLOCKSIZE := 128k
   PAGESIZE := 2048
-  KERNEL := kernel-bin | gzip
-  KERNEL_INITRAMFS := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
+  KERNEL_SIZE := 6144k
   KERNEL_INITRAMFS_SUFFIX := -recovery.itb
-  IMAGES := sysupgrade.itb
-  IMAGE/sysupgrade.itb := append-kernel | fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-static-with-rootfs | append-metadata
-  ARTIFACTS := ubi-loader.itb
-  ARTIFACT/ubi-loader.itb := uboot-bin xiaomi_redmi-router-ax6s-ubi-loader | lzma | uboot-fit lzma
-ifneq ($(CONFIG_TARGET_ROOTFS_SQUASHFS),)
-  ARTIFACTS += factory.bin
-  ARTIFACT/factory.bin := uboot-bin xiaomi_redmi-router-ax6s-ubi-loader | lzma | uboot-fit lzma | pad-to 512k | ubinize-image fit squashfs-sysupgrade.itb
-endif
-  DEVICE_COMPAT_VERSION := 2.0
-  DEVICE_COMPAT_MESSAGE := Flash layout changes require a manual reinstall using factory.bin.
+  IMAGES += factory.bin
+  IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
 endef
 TARGET_DEVICES += xiaomi_redmi-router-ax6s
