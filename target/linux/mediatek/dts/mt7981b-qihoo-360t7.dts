@@ -52,7 +52,7 @@
 
 	partition@7300000 {
 		label = "log";
-		reg = <0x7300000 0x700000>;
+		reg = <0x7300000 0x0400000>;
 		read-only;
 	};
 };
