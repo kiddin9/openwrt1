@@ -390,6 +390,11 @@ default_postinst() {
 		fi
 
 		rm -f /tmp/luci-indexcache.*
+
+		if grep -qs '^/usr/share/rpcd/acl.d/' "$filelist"; then
+			[ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload
+		fi
+
 	fi
 
 	if [ -f "$root/usr/lib/opkg/info/${pkgname}.postinst-pkg" ]; then
@@ -404,11 +409,16 @@ default_postinst() {
 		else
 			if [ "$PKG_UPGRADE" != "1" ]; then
 				"$i" enable
+				"$i" start
+			elif "$i" enabled; then
+				"$i" start
 			fi
-			"$i" start
 		fi
 	done
 
+	if grep -qs '^/usr/share/ucitrack/' "$filelist"; then
+		[ -x /etc/init.d/ucitrack ] && /etc/init.d/ucitrack reload
+	fi
 	return $ret
 }
 
