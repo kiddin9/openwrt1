@@ -186,5 +186,12 @@ extra_command "enabled" "Check if service is started on boot"
 
 ALL_COMMANDS="${ALL_COMMANDS} ${EXTRA_COMMANDS}"
 ALL_HELP="${ALL_HELP}${EXTRA_HELP}"
+
+[ -z "$IPKG_INSTROOT" ] && [ -z "$USE_PROCD" ] && [ -r /proc/self/comm ] && {
+	read -r _c < /proc/self/comm
+	[ "$_c" != "sh" ] && exec /bin/sh "$0" "$initscript" "$action" "$@"
+	unset _c
+}
+
 list_contains ALL_COMMANDS "$action" || action=help
 $action "$@"
