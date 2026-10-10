@@ -369,14 +369,6 @@ define Image/gzip-ext4-padded-squashfs
 
 endef
 
-ifdef CONFIG_TARGET_ROOTFS_TARGZ
-  define Image/Build/targz
-	$(TAR) -cp --numeric-owner --owner=0 --group=0 --mode=a-s --sort=name \
-		$(if $(SOURCE_DATE_EPOCH),--mtime="@$(SOURCE_DATE_EPOCH)") \
-		-C $(TARGET_DIR)/ . | gzip -9n > $(BIN_DIR)/$(IMG_PREFIX)$(if $(PROFILE_SANITIZED),-$(PROFILE_SANITIZED))-rootfs.tar.gz
-  endef
-endif
-
 ifdef CONFIG_TARGET_ROOTFS_CPIOGZ
   define Image/Build/cpiogz
 	( cd $(TARGET_DIR); find . | $(STAGING_DIR_HOST)/bin/cpio -o -H newc -R 0:0 | gzip -9n >$(BIN_DIR)/$(IMG_ROOTFS).cpio.gz )
@@ -754,7 +746,7 @@ define Device/Build/kernel
 endef
 
 define Device/Build/image
-  GZ_SUFFIX := $(if $(filter %dtb %gz,$(2)),,$(if $(and $(findstring ext4,$(1)),$(CONFIG_TARGET_IMAGES_GZIP)),.gz))
+  GZ_SUFFIX := $(if $(filter %dtb %gz,$(2)),,$(if $(and $(findstring ext4,$(1)),$(findstring img,$(2)),$(CONFIG_TARGET_IMAGES_GZIP)),.gz))
   $$(_TARGET): $(if $(CONFIG_JSON_OVERVIEW_IMAGE_INFO), \
 	  $(BUILD_DIR)/json_info_files/$(call DEVICE_IMG_NAME,$(1),$(2)).json, \
 	  $(BIN_DIR)/$(call DEVICE_IMG_NAME,$(1),$(2))$$(GZ_SUFFIX))
@@ -792,6 +784,7 @@ define Device/Build/image
 	FILE_TYPE=$(word 1,$(subst ., ,$(2))) \
 	FILE_FILESYSTEM="$(1)" \
 	DEVICE_IMG_PREFIX="$(DEVICE_IMG_PREFIX)" \
+	IMAGE_SIZE="$(shell echo $$(($(call exp_units,$(IMAGE_SIZE)))))" \
 	DEVICE_VENDOR="$(DEVICE_VENDOR)" \
 	DEVICE_MODEL="$(DEVICE_MODEL)" \
 	DEVICE_VARIANT="$(DEVICE_VARIANT)" \
@@ -906,6 +899,7 @@ define Device/DumpInfo
 Target-Profile: DEVICE_$(1)
 Target-Profile-Name: $(DEVICE_DISPLAY)
 Target-Profile-Packages: $(DEVICE_PACKAGES)
+Target-Profile-ImageSize: $(shell echo $$(( $(call exp_units,$(IMAGE_SIZE)) / 1024 )))
 Target-Profile-hasImageMetadata: $(if $(foreach image,$(IMAGES),$(findstring append-metadata,$(IMAGE/$(image)))),1,0)
 Target-Profile-SupportedDevices: $(SUPPORTED_DEVICES)
 $(if $(BROKEN),Target-Profile-Broken: $(BROKEN))
