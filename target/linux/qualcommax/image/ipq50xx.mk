@@ -228,6 +228,18 @@ define Device/iodata_wn-dax3000gr
 endef
 TARGET_DEVICES += iodata_wn-dax3000gr
 
+define Device/jdcloud_re-cs-03
+	$(call Device/FitImage)
+	$(call Device/EmmcImage)
+	SOC := ipq5018
+	BLOCKSIZE := 64k
+	KERNEL_SIZE := 6144k
+	DEVICE_VENDOR := JDCloud
+	DEVICE_MODEL := AX3000
+	DEVICE_DTS_CONFIG := config@mp03.5-c2
+endef
+TARGET_DEVICES += jdcloud_re-cs-03
+
 define Device/linksys_ipq50xx_mx_base
 	$(call Device/FitImageLzma)
 	DEVICE_VENDOR := Linksys
