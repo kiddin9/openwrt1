@@ -228,6 +228,11 @@ platform_do_upgrade() {
 		remove_oem_ubi_volume wifi_fw
 		glinet_do_upgrade "$1"
 		;;
+	jdcloud,re-cs-03)
+		CI_KERNPART="0:HLOS"
+		CI_ROOTPART="rootfs"
+		emmc_do_upgrade "$1"
+		;;
 	linksys,mr2000|\
 	linksys,mr5500|\
 	linksys,mx2000|\
@@ -374,6 +379,7 @@ platform_do_upgrade() {
 
 platform_copy_config() {
 	case "$(board_name)" in
+	jdcloud,re-cs-03|\
 	ubnt,unifi-6-pro)
 		emmc_copy_config
 		;;
